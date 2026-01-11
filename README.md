@@ -1,178 +1,180 @@
-# MIPS32 5-Stage Pipeline Processor (Basic Implementation)
+MIPS32 5-Stage Pipelined Processor (Basic Design)
+📌 Overview
 
-## 1. Project Specification
+This project implements a basic MIPS32 processor using a 5-stage pipelined datapath in Verilog HDL.
+The design follows the classical MIPS architecture and focuses on instruction flow, datapath design, and pipeline operation.
 
-### 1.1 ISA Specification
-- Architecture: MIPS32
-- Instruction length: 32 bits
-- Data width: 32 bits
-- Addressing mode: Byte-addressable memory
-- Register file:
-  - 32 general-purpose registers
-  - Each register is 32 bits wide
+⚠️ Note:
+This implementation does not include hazard detection or forwarding units.
+Instruction sequences are assumed to be hazard-free and manually scheduled.
 
-### 1.2 Pipeline Specification
-- Pipeline depth: 5 stages
-- Pipeline registers:
-  - IF/ID
-  - ID/EX
-  - EX/MEM
-  - MEM/WB
-- Clocking scheme: Single global clock
-- Reset: Synchronous reset
+🧾 1. MIPS32 Architectural Specification
+1.1 Register Organization
 
-### 1.3 Supported Instructions
-- **R-type**: add, sub, and, or, slt
-- **I-type**: lw, sw, addi
-- **Branch**: beq (basic comparison)
+32 general-purpose registers (GPRs)
 
-⚠️ Instruction sequences must be manually scheduled to avoid hazards.
+Register width: 32 bits
 
----
+Registers: R0 to R31
 
-## 2. Architectural Overview
+R0 is hardwired to constant 0 (cannot be written)
 
-The processor is based on the classical **MIPS32 datapath** and is implemented
-as a **5-stage pipelined processor** using Verilog HDL.
+1.2 Program Counter (PC)
 
-To clearly understand the benefits of pipelining, both **non-pipelined** and
-**pipelined** datapaths are shown.
+Special-purpose 32-bit register
 
----
+Holds the address of the next instruction to be fetched
 
-## 2.1 MIPS32 Non-Pipelined Datapath
+1.3 Memory Assumptions
 
-![MIPS32 Non-Pipelined Datapath](docs/mips32_non_pipelined_datapath.png)
+Word size: 32 bits
 
-### Description
-In the non-pipelined datapath, **only one instruction is executed at a time**.
-All stages of instruction execution are completed within a **single clock cycle**.
+Memory is word-addressable
 
-### Key Characteristics
-- No overlap between instruction executions
-- Long clock period determined by worst-case delay
-- Simple control logic
-- Low instruction throughput
+Only load and store instructions access memory
 
-### Functional Flow
-1. Instruction fetch using Program Counter (PC)
-2. Instruction decode and register read
-3. ALU operation
-4. Data memory access (if required)
-5. Write-back to register file
+1.4 Key Architectural Characteristics
 
-This architecture serves as a **baseline reference** for understanding pipelining.
+No flag registers
 
----
+Few addressing modes
 
-## 2.2 MIPS32 5-Stage Pipelined Datapath
+Load/store architecture
 
-![MIPS32 Pipelined Datapath](docs/mips32_pipelined_datapath.png)
+Simple and regular instruction encoding
 
-### Description
-The pipelined datapath divides instruction execution into **five stages**,
-allowing **multiple instructions to execute concurrently**, each in a different stage.
+🧠 2. Instruction Set Overview
+2.1 Load & Store Instructions
+LW   R2, 124(R8)     // R2 = Mem[R8 + 124]
+SW   R5, -10(R25)    // Mem[R25 - 10] = R5
 
-Pipeline registers isolate each stage and store intermediate values and control signals.
+2.2 Arithmetic & Logic Instructions (Register Type)
+ADD  R1, R2, R3      // R1 = R2 + R3
+SUB  R12, R10, R8
+AND  R20, R1, R5
+OR   R11, R5, R6
+MUL  R5, R6, R7
+SLT  R5, R11, R12
 
-### Pipeline Registers
-- **IF/ID**: Instruction and PC+4
-- **ID/EX**: Register operands, immediate, control signals
-- **EX/MEM**: ALU result and memory control
-- **MEM/WB**: Data to be written back to registers
+2.3 Arithmetic & Logic Instructions (Immediate Type)
+ADDI R1, R2, 25
+SUBI R5, R1, 150
+SLTI R2, R10, 10
 
-### Advantages
-- Higher instruction throughput
-- Better utilization of hardware resources
-- Reduced clock period compared to non-pipelined design
+2.4 Branch Instructions
+BEQZ  R1, LOOP       // Branch if R1 == 0
+BNEQZ R5, LABEL      // Branch if R5 != 0
 
-⚠️ This implementation assumes **hazard-free instruction execution**.
+2.5 Jump Instruction
+J LOOP               // Unconditional jump
 
----
+2.6 Miscellaneous
+HLT                  // Halt execution
 
-## 3. Pipeline Microarchitecture (Stage-wise)
+🧩 3. Instruction Encoding
 
-### 3.1 Instruction Fetch (IF) Stage
-**Purpose**
-- Fetch instruction from instruction memory
-- Compute next program counter value (PC + 4)
+All MIPS32 instructions are 32 bits wide and classified into three formats:
 
-**Hardware Components**
-- Program Counter (PC)
-- Instruction Memory
-- Adder for PC increment
+3.1 R-Type Instruction Format
+| opcode | rs | rt | rd | shamt | funct |
+|  6b    |5b  |5b  |5b  | 5b    | 6b    |
 
-**Pipeline Register**
-- IF/ID stores fetched instruction and PC+4
 
----
+Uses three registers
 
-### 3.2 Instruction Decode (ID) Stage
-**Purpose**
-- Decode instruction
-- Read source registers
-- Generate immediate value
+Two source registers, one destination register
 
-**Hardware Components**
-- Instruction Register (IR)
-- Register File
-- Sign Extension Unit
+funct field specifies the operation
 
-**Operations**
-- Extract opcode, rs, rt, rd fields
-- Read operands A and B
-- Sign-extend immediate value
+3.2 I-Type Instruction Format
+| opcode | rs | rt | immediate |
+|  6b    |5b  |5b  |   16b     |
 
-**Pipeline Register**
-- ID/EX stores operands, immediate, and control signals
 
----
+Used for immediate, load/store, and branch instructions
 
-### 3.3 Execute (EX) Stage
-**Purpose**
-- Perform arithmetic or logical operations
-- Evaluate branch condition
-- Compute branch target address
+Immediate field is sign-extended
 
-**Hardware Components**
-- ALU
-- ALU Control Logic
-- Operand selection multiplexers
+3.3 J-Type Instruction Format
+| opcode | address |
+|  6b    |  26b    |
 
-**Operations**
-- ALU performs computation based on instruction
-- Branch comparison for `beq`
 
-**Pipeline Register**
-- EX/MEM stores ALU output and control signals
+Used for jump instructions
 
----
+Address combined with PC for target calculation
 
-### 3.4 Memory Access (MEM) Stage
-**Purpose**
-- Access data memory for load and store instructions
+🧭 4. Addressing Modes in MIPS32
+Addressing Mode	Example
+Register	ADD R1, R2, R3
+Immediate	ADDI R1, R2, 100
+Base (Register + Offset)	LW R5, 150(R7)
+PC-Relative	BEQZ R3, LABEL
+Pseudo-Direct	J LOOP
+🏗️ 5. Datapath Architecture
+5.1 Non-Pipelined Datapath
 
-**Hardware Components**
-- Data Memory
+Characteristics
 
-**Operations**
-- Read memory for `lw`
-- Write memory for `sw`
+One instruction executes completely before the next begins
 
-**Pipeline Register**
-- MEM/WB stores memory data or ALU result
+Single long clock cycle
 
----
+Simple but inefficient
 
-### 3.5 Write Back (WB) Stage
-**Purpose**
-- Write final result back to the register file
+Used as a reference model to understand instruction flow.
 
-**Hardware Components**
-- Write-back multiplexer
+5.2 5-Stage Pipelined Datapath
 
-**Operations**
-- Select between ALU result and memory output
-- Write selected data into destination register
+Pipeline Registers
 
----
+IF/ID
+
+ID/EX
+
+EX/MEM
+
+MEM/WB
+
+Advantages
+
+Overlapping instruction execution
+
+Improved throughput
+
+Better hardware utilization
+
+⚠️ No hazard detection or forwarding logic included.
+
+🔄 6. Instruction Cycle (Pipeline Stages)
+6.1 IF — Instruction Fetch
+
+Fetch instruction from Instruction Memory
+
+Compute PC + 4
+
+6.2 ID — Instruction Decode & Register Fetch
+
+Decode instruction fields
+
+Read register operands
+
+Sign-extend immediate
+
+6.3 EX — Execute / Address Calculation
+
+ALU performs arithmetic/logic
+
+Branch condition evaluated
+
+Effective address computed
+
+6.4 MEM — Memory Access
+
+Data memory read/write
+
+Branch completion
+
+6.5 WB — Write Back
+
+Write ALU result or memory data to register file
