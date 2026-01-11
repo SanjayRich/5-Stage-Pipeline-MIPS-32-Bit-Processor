@@ -67,7 +67,7 @@ This architecture serves as a **baseline reference** for understanding pipelinin
 
 ## 2.2 MIPS32 5-Stage Pipelined Datapath
 
-![MIPS32 Pipelined Datapath]()
+![MIPS32 Pipelined Datapath](MIPS32-Pipelined.png)
 
 ### Description
 The pipelined datapath divides instruction execution into **five stages**,
