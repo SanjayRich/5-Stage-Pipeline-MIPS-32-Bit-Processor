@@ -179,5 +179,3 @@ Pipeline registers isolate each stage and store intermediate values and control 
 
 
 
-## 8. Author
-**Sanjay**
