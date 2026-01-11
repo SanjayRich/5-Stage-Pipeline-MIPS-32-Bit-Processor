@@ -42,7 +42,7 @@ To clearly understand the benefits of pipelining, both **non-pipelined** and
 
 ## 2.1 MIPS32 Non-Pipelined Datapath
 
-![MIPS32 Non-Pipelined Datapath](docs/mips32_non_pipelined_datapath.png)
+![MIPS32 Non-Pipelined Datapath](MIPS32-Non_Pipelined.png)
 
 ### Description
 In the non-pipelined datapath, **only one instruction is executed at a time**.
