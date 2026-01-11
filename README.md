@@ -1,4 +1,4 @@
-# MIPS32 5-Stage Pipeline Processor (Basic Implementation)
+# MIPS32 5-Stage Pipeline Processor
 
 ## 1. Project Specification
 
