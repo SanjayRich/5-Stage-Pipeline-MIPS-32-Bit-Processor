@@ -25,8 +25,8 @@ module test_mips;
         MIPS.Mem[0] = 32'h2801000a; // ADDI R1,R0,10
         MIPS.Mem[1] = 32'h28020014; // ADDI R2,R0,20
         MIPS.Mem[2] = 32'h28030019; // ADDI R3,R0,25
-        MIPS.Mem[3] = 32'h0ce77800; // OR   R7,R7,R7 -- Dummy instruction to avoid 
-        MIPS.Mem[4] = 32'h0ce77800; // OR   R7,R7,R7 -- Dummy instruction to avoid 
+        MIPS.Mem[3] = 32'h0ce77800; // OR   R7,R7,R7 -- Dummy instruction to avoid data Hazard due to pipelining
+        MIPS.Mem[4] = 32'h0ce77800; // OR   R7,R7,R7 -- Dummy instruction to avoid data Hazard due to pipelining
         MIPS.Mem[5] = 32'h00222000; // ADD  R4,R1,R2
         MIPS.Mem[6] = 32'h0ce77800; // OR   R7,R7,R7
         MIPS.Mem[7] = 32'h00832800; // ADD  R5,R4,R3 
@@ -48,5 +48,6 @@ module test_mips;
             #300 $finish;
 
         end
+
 
 endmodule;
